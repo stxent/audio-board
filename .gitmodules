@@ -1,0 +1,9 @@
+[submodule "libs/xcore"]
+	path = libs/xcore
+	url = ../xcore
+[submodule "libs/halm"]
+	path = libs/halm
+	url = ../halm
+[submodule "libs/dpm"]
+	path = libs/dpm
+	url = ../dpm
