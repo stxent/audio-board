@@ -17,8 +17,8 @@ enum
   SLAVE_REG_RESET   = 0x00,
   SLAVE_REG_SYS     = 0x01,
   SLAVE_REG_CTL     = 0x02,
-  SLAVE_REG_STATUS  = 0x03,
-  SLAVE_REG_LED     = 0x04,
+  SLAVE_REG_LED     = 0x03,
+  SLAVE_REG_STATUS  = 0x04,
   SLAVE_REG_SW      = 0x05,
   SLAVE_REG_PATH    = 0x06,
   SLAVE_REG_MIC     = 0x07,
@@ -30,8 +30,8 @@ struct SlaveRegOverlay
   uint8_t reset;
   uint8_t sys;
   uint8_t ctl;
-  uint8_t status;
   uint8_t led;
+  uint8_t status;
   uint8_t sw;
 
   /*
