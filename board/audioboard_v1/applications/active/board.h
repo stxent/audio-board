@@ -1,11 +1,11 @@
 /*
- * board/v1/application/board.h
+ * board/audioboard_v1/applications/active/board.h
  * Copyright (C) 2023 xent
  * Project is distributed under the terms of the GNU General Public License v3.0
  */
 
-#ifndef BOARD_V1_APPLICATION_BOARD_H_
-#define BOARD_V1_APPLICATION_BOARD_H_
+#ifndef BOARD_AUDIOBOARD_V1_APPLICATIONS_ACTIVE_BOARD_H_
+#define BOARD_AUDIOBOARD_V1_APPLICATIONS_ACTIVE_BOARD_H_
 /*----------------------------------------------------------------------------*/
 #include "board_shared.h"
 #include <dpm/audio/tlv320aic3x.h>
@@ -88,4 +88,4 @@ int appBoardStart(struct Board *);
 
 END_DECLS
 /*----------------------------------------------------------------------------*/
-#endif /* BOARD_V1_APPLICATION_BOARD_H_ */
+#endif /* BOARD_AUDIOBOARD_V1_APPLICATIONS_ACTIVE_BOARD_H_ */

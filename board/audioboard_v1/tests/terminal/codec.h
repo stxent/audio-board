@@ -1,11 +1,11 @@
 /*
- * board/v1/tests/terminal/codec.h
+ * board/audioboard_v1/tests/terminal/codec.h
  * Copyright (C) 2022 xent
  * Project is distributed under the terms of the MIT License
  */
 
-#ifndef BOARD_V1_TESTS_TERMINAL_H_
-#define BOARD_V1_TESTS_TERMINAL_H_
+#ifndef BOARD_AUDIOBOARD_V1_TESTS_TERMINAL_H_
+#define BOARD_AUDIOBOARD_V1_TESTS_TERMINAL_H_
 /*----------------------------------------------------------------------------*/
 #include <halm/pin.h>
 #include <xcore/entity.h>
@@ -57,4 +57,4 @@ void codecWriteReg16(struct Codec *, uint16_t, uint16_t, bool *);
 
 END_DECLS
 /*----------------------------------------------------------------------------*/
-#endif /* BOARD_V1_TESTS_TERMINAL_H_ */
+#endif /* BOARD_AUDIOBOARD_V1_TESTS_TERMINAL_H_ */

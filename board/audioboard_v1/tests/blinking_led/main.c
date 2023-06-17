@@ -1,5 +1,5 @@
 /*
- * board/v1/tests/blinking_led/main.c
+ * board/audioboard_v1/tests/blinking_led/main.c
  * Copyright (C) 2022 xent
  * Project is distributed under the terms of the GNU General Public License v3.0
  */

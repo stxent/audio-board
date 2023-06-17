@@ -1,11 +1,11 @@
 /*
- * board/v1/shared/controls.h
+ * board/audioboard_v1/shared/controls.h
  * Copyright (C) 2023 xent
  * Project is distributed under the terms of the GNU General Public License v3.0
  */
 
-#ifndef BOARD_V1_SHARED_CONTROLS_H_
-#define BOARD_V1_SHARED_CONTROLS_H_
+#ifndef BOARD_AUDIOBOARD_V1_SHARED_CONTROLS_H_
+#define BOARD_AUDIOBOARD_V1_SHARED_CONTROLS_H_
 /*----------------------------------------------------------------------------*/
 #include <xcore/bits.h>
 /*----------------------------------------------------------------------------*/
@@ -28,4 +28,4 @@ enum
 #define SW_MASK           MASK(6)
 #define VOLTAGE_THRESHOLD 4900
 /*----------------------------------------------------------------------------*/
-#endif /* BOARD_V1_SHARED_CONTROLS_H_ */
+#endif /* BOARD_AUDIOBOARD_V1_SHARED_CONTROLS_H_ */

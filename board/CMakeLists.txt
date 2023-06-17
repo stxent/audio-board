@@ -5,6 +5,9 @@ if(NOT DEFINED BOARD)
     message(FATAL_ERROR "BOARD not defined")
 endif()
 
+# State of the board configuration switches
+set(OVERRIDE_SW "" CACHE STRING "Override state of the board switches, use empty value to disable.")
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/libs/xcore/cmake")
 include(GetGitInfo)
@@ -66,6 +69,9 @@ foreach(EXECUTABLE_NAME ${EXECUTABLES})
     target_link_libraries(${EXECUTABLE_ARTIFACT} PRIVATE shared)
     target_link_libraries(${EXECUTABLE_ARTIFACT} PRIVATE -T"${PROJECT_BINARY_DIR}/application.ld" ${FLAGS_LINKER})
 
+    if(NOT OVERRIDE_SW STREQUAL "")
+        target_compile_definitions(${EXECUTABLE_ARTIFACT} PRIVATE -DCONFIG_OVERRIDE_SW=${OVERRIDE_SW})
+    endif()
     if(USE_DBG)
         target_compile_definitions(${EXECUTABLE_ARTIFACT} PRIVATE -DENABLE_DBG)
     endif()

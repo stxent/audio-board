@@ -1,11 +1,11 @@
 /*
- * board/v1/shared/board_shared.h
+ * board/audioboard_v1/shared/board_shared.h
  * Copyright (C) 2023 xent
  * Project is distributed under the terms of the GNU General Public License v3.0
  */
 
-#ifndef BOARD_V1_SHARED_BOARD_SHARED_H_
-#define BOARD_V1_SHARED_BOARD_SHARED_H_
+#ifndef BOARD_AUDIOBOARD_V1_SHARED_BOARD_SHARED_H_
+#define BOARD_AUDIOBOARD_V1_SHARED_BOARD_SHARED_H_
 /*----------------------------------------------------------------------------*/
 #include <halm/pin.h>
 #include <stdbool.h>
@@ -108,4 +108,4 @@ bool boardSetupClock(void);
 
 END_DECLS
 /*----------------------------------------------------------------------------*/
-#endif /* BOARD_V1_SHARED_BOARD_SHARED_H_ */
+#endif /* BOARD_AUDIOBOARD_V1_SHARED_BOARD_SHARED_H_ */

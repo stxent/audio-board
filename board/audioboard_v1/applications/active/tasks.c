@@ -1,5 +1,5 @@
 /*
- * board/v1/application/tasks.c
+ * board/audioboard_v1/applications/active/tasks.c
  * Copyright (C) 2023 xent
  * Project is distributed under the terms of the GNU General Public License v3.0
  */
@@ -122,11 +122,16 @@ static uint8_t readSwitchState(struct Board *board)
 {
   uint8_t state;
 
+#ifdef CONFIG_OVERRIDE_SW
+  (void)board;
+  state = CONFIG_OVERRIDE_SW;
+#else
   pinReset(board->controlPackage.enR);
   pinSet(board->controlPackage.csR);
   pinSet(board->controlPackage.enR);
   ifRead(board->controlPackage.spi, &state, sizeof(state));
   pinReset(board->controlPackage.csR);
+#endif
 
   return state & SW_MASK;
 }

@@ -14,12 +14,21 @@ cd audio-board
 git submodule update --init --recursive
 ```
 
-Build release version with debug information:
+Build release version:
 
 ```sh
 mkdir build
 cd build
-cmake .. -DPLATFORM=LPC11XX -DBOARD=v1 -DCMAKE_TOOLCHAIN_FILE=libs/xcore/toolchains/cortex-m0.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_LTO=OFF
+cmake .. -DPLATFORM=LPC11XX -DBOARD=audioboard_v1 -DCMAKE_TOOLCHAIN_FILE=libs/xcore/toolchains/cortex-m0.cmake -DCMAKE_BUILD_TYPE=Release -DUSE_LTO=OFF -DUSE_WDT=ON
+make
+```
+
+Build release version with fixed board configuration switches:
+
+```sh
+mkdir build
+cd build
+cmake .. -DPLATFORM=LPC11XX -DBOARD=audioboard_v1 -DCMAKE_TOOLCHAIN_FILE=libs/xcore/toolchains/cortex-m0.cmake -DCMAKE_BUILD_TYPE=Release -DUSE_LTO=OFF -DUSE_WDT=ON -DOVERRIDE_SW=34
 make
 ```
 

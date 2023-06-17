@@ -1,5 +1,5 @@
 /*
- * board/v1/tests/terminal/codec.c
+ * board/audioboard_v1/tests/terminal/codec.c
  * Copyright (C) 2022 xent
  * Project is distributed under the terms of the MIT License
  */
