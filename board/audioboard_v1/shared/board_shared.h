@@ -97,6 +97,8 @@ struct Interface *boardMakeSpi(void);
 struct Interrupt *boardMakeWakeupInt(void);
 struct Watchdog *boardMakeWatchdog(void);
 
+bool boardRecoverState(uint32_t *);
+void boardSaveState(uint32_t);
 bool boardSetupAdcPackage(struct AdcPackage *);
 bool boardSetupAmpPackage(struct AmpPackage *);
 bool boardSetupButtonPackage(struct ButtonPackage *);

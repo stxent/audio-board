@@ -28,7 +28,7 @@ Build release version with fixed board configuration switches:
 ```sh
 mkdir build
 cd build
-cmake .. -DPLATFORM=LPC11XX -DBOARD=audioboard_v1 -DCMAKE_TOOLCHAIN_FILE=libs/xcore/toolchains/cortex-m0.cmake -DCMAKE_BUILD_TYPE=Release -DUSE_LTO=OFF -DUSE_WDT=ON -DOVERRIDE_SW=34
+cmake .. -DPLATFORM=LPC11XX -DBOARD=audioboard_v1 -DCMAKE_TOOLCHAIN_FILE=libs/xcore/toolchains/cortex-m0.cmake -DCMAKE_BUILD_TYPE=Release -DUSE_LTO=OFF -DUSE_WDT=ON -DOVERRIDE_SW=32
 make
 ```
 

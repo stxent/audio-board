@@ -139,16 +139,6 @@ static uint8_t readSwitchState(struct Board *board)
 static void slaveLoadSettings(struct SlaveRegOverlay *overlay,
     const struct Settings *settings)
 {
-  /* Amplifier control */
-  overlay->ctl &= ~SLAVE_CTL_MASK;
-
-  if (settings->ampEnabled)
-    overlay->ctl |= SLAVE_CTL_POWER;
-  if (settings->ampGain & 0x01)
-    overlay->ctl |= SLAVE_CTL_GAIN0;
-  if (settings->ampGain & 0x02)
-    overlay->ctl |= SLAVE_CTL_GAIN1;
-
   /* Path control */
   overlay->path &= ~SLAVE_PATH_MASK;
 
@@ -188,14 +178,6 @@ static void slaveLoadSettings(struct SlaveRegOverlay *overlay,
 static void slaveStoreSettings(struct Settings *settings,
     const struct SlaveRegOverlay *overlay)
 {
-  settings->ampEnabled = (overlay->ctl & SLAVE_CTL_POWER) != 0;
-
-  settings->ampGain = 0;
-  if (overlay->ctl & SLAVE_CTL_GAIN0)
-    settings->ampGain |= 0x01;
-  if (overlay->ctl & SLAVE_CTL_GAIN1)
-    settings->ampGain |= 0x02;
-
   switch (SLAVE_PATH_INPUT_VALUE(overlay->path))
   {
     case 1:
@@ -616,10 +598,11 @@ static void slaveUpdateTask(void *argument)
   overlay.sys &= SLAVE_SYS_MASK;
   overlay.ctl &= SLAVE_CTL_MASK;
 
-  ifWrite(board->system.slave, &overlay, sizeof(overlay));
+  /* Save the state to a backup memory */
+  boardSaveState(overlay.sys | (overlay.ctl << 8));
 
-  board->system.timeout = board->system.autosuspend ?
-      AUTO_SUSPEND_TIMEOUT : 0;
+  ifWrite(board->system.slave, &overlay, sizeof(overlay));
+  board->system.timeout = board->system.autosuspend ? AUTO_SUSPEND_TIMEOUT : 0;
 }
 /*----------------------------------------------------------------------------*/
 static void spkUpdateTask(void *argument)
@@ -679,19 +662,35 @@ static void startupTask(void *argument)
     if ((board->system.slave = boardMakeI2CSlave()) != NULL)
     {
       struct SlaveRegOverlay overlay;
-      memset(&overlay, 0, sizeof(overlay));
+      uint32_t state;
 
+      memset(&overlay, 0, sizeof(overlay));
       overlay.sw = sw;
 
-      if (sw & SW_EXT_CLOCK)
-        overlay.sys |= SLAVE_SYS_EXT_CLOCK;
-      if (!(sw & SW_LOAD_CONFIG))
-        overlay.ctl |= SLAVE_CTL_POWER;
-      if (sw & SW_OUTPUT_GAIN_BOOST)
-        overlay.ctl |= SLAVE_CTL_GAIN0 | SLAVE_CTL_GAIN1;
-
-      if ((sw & SW_LOAD_CONFIG) && valid)
+      if (valid)
+      {
+        /* Step 1: try to load saved codec settings */
         slaveLoadSettings(&overlay, &settings);
+      }
+
+      if (boardRecoverState(&state))
+      {
+        /* Step 2: try to recover previous state */
+
+        overlay.sys = (uint8_t)state;
+        overlay.ctl = (uint8_t)(state >> 8);
+      }
+      else
+      {
+        /* Step 3: use board configuration switches */
+
+        if (sw & SW_EXT_CLOCK)
+          overlay.sys |= SLAVE_SYS_EXT_CLOCK;
+        if (!(sw & SW_LOAD_CONFIG))
+          overlay.ctl |= SLAVE_CTL_POWER;
+        if (sw & SW_OUTPUT_GAIN_BOOST)
+          overlay.ctl |= SLAVE_CTL_GAIN0 | SLAVE_CTL_GAIN1;
+      }
 
       ifWrite(board->system.slave, &overlay, sizeof(overlay));
       ifSetCallback(board->system.slave, onSlaveUpdateEvent, board);

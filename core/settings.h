@@ -16,8 +16,6 @@ struct Settings
 {
   uint8_t magic;
 
-  uint8_t ampEnabled;
-  uint8_t ampGain;
   uint8_t codecInputAGCEnabled;
   uint8_t codecInputLevel;
   uint8_t codecInputPath;
