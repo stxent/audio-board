@@ -9,7 +9,7 @@
 #include <dpm/audio/tlv320aic3x.h>
 #include <dpm/button.h>
 #include <halm/core/cortex/systick.h>
-#include <halm/generic/software_timer.h>
+#include <halm/generic/timer_factory.h>
 #include <halm/generic/work_queue.h>
 #include <halm/platform/lpc/adc.h>
 #include <halm/platform/lpc/backup_domain.h>
@@ -190,7 +190,7 @@ struct Interrupt *boardMakeWakeupInt(void)
   static const struct WakeupIntConfig wakeupIntConfig = {
       .pin = PIN(0, 5),
       .priority = PRI_WAKEUP,
-      .event = PIN_FALLING,
+      .event = INPUT_FALLING,
       .pull = PIN_NOPULL
   };
 
@@ -279,25 +279,25 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
       /* MIC */
       {
           .pin = BOARD_BUTTON_MIC_PIN,
-          .event = PIN_FALLING,
+          .event = INPUT_FALLING,
           .pull = PIN_PULLUP
       },
       /* SPK */
       {
           .pin = BOARD_BUTTON_SPK_PIN,
-          .event = PIN_FALLING,
+          .event = INPUT_FALLING,
           .pull = PIN_PULLUP
       },
       /* VOL- */
       {
           .pin = BOARD_BUTTON_VOL_M_PIN,
-          .event = PIN_FALLING,
+          .event = INPUT_FALLING,
           .pull = PIN_PULLUP
       },
       /* VOL+ */
       {
           .pin = BOARD_BUTTON_VOL_P_PIN,
-          .event = PIN_FALLING,
+          .event = INPUT_FALLING,
           .pull = PIN_PULLUP
       }
   };
@@ -328,8 +328,8 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
     return false;
   timerSetOverflow(package->base, 5);
 
-  package->factory = init(SoftwareTimerFactory,
-      &(struct SoftwareTimerFactoryConfig){package->base});
+  package->factory = init(TimerFactory,
+      &(struct TimerFactoryConfig){package->base});
   if (package->factory == NULL)
     return false;
 
@@ -339,7 +339,7 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
     if (package->events[i] == NULL)
       return false;
 
-    package->timers[i] = softwareTimerCreate(package->factory);
+    package->timers[i] = timerFactoryCreate(package->factory);
     if (package->timers[i] == NULL)
       return false;
     timerSetOverflow(package->timers[i], 2);

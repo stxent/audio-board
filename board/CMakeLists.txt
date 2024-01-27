@@ -65,9 +65,9 @@ foreach(EXECUTABLE_NAME ${EXECUTABLES})
 
     add_executable(${EXECUTABLE_ARTIFACT} ${${EXECUTABLE_NAME}_SOURCES})
     target_include_directories(${EXECUTABLE_ARTIFACT} PRIVATE ${EXECUTABLE_NAME}_DIR)
-
+    target_link_options(${EXECUTABLE_ARTIFACT} PRIVATE SHELL:${FLAGS_CPU} SHELL:${FLAGS_LINKER})
+    target_link_options(${EXECUTABLE_ARTIFACT} PRIVATE SHELL:-T"${PROJECT_BINARY_DIR}/application.ld")
     target_link_libraries(${EXECUTABLE_ARTIFACT} PRIVATE shared)
-    target_link_libraries(${EXECUTABLE_ARTIFACT} PRIVATE -T"${PROJECT_BINARY_DIR}/application.ld" ${FLAGS_LINKER})
 
     if(NOT OVERRIDE_SW STREQUAL "")
         target_compile_definitions(${EXECUTABLE_ARTIFACT} PRIVATE -DCONFIG_OVERRIDE_SW=${OVERRIDE_SW})
