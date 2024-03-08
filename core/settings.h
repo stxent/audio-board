@@ -12,7 +12,7 @@
 /*----------------------------------------------------------------------------*/
 struct Interface;
 
-struct Settings
+struct [[gnu::packed]] Settings
 {
   uint8_t magic;
 
@@ -23,7 +23,7 @@ struct Settings
   uint8_t codecOutputPath;
 
   uint8_t checksum;
-} __attribute__((packed));
+};
 /*----------------------------------------------------------------------------*/
 bool loadSettings(struct Interface *, uint32_t, struct Settings *);
 void saveSettings(struct Interface *, uint32_t, const struct Settings *);

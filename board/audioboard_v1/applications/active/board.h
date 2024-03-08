@@ -11,12 +11,12 @@
 #include <dpm/audio/tlv320aic3x.h>
 #include <halm/pin.h>
 /*----------------------------------------------------------------------------*/
-enum VolumeControlMode
+enum [[gnu::packed]] VolumeControlMode
 {
   MODE_NONE,
   MODE_MIC,
   MODE_SPK
-} __attribute__((packed));
+};
 
 struct Board
 {

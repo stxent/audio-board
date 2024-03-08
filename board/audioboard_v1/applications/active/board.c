@@ -75,7 +75,7 @@ void appBoardInit(struct Board *board)
   board->debug.loops = 0;
 }
 /*----------------------------------------------------------------------------*/
-int appBoardStart(struct Board *board __attribute__((unused)))
+int appBoardStart(struct Board *)
 {
   wqStart(WQ_DEFAULT);
   return 0;

@@ -35,7 +35,7 @@ static void onFlushTimerOverflow(void *argument)
   wqAdd(WQ_DEFAULT, flushAcquiredSamples, argument);
 }
 /*----------------------------------------------------------------------------*/
-static void onLoadTimerOverflow(void *argument __attribute__((unused)))
+static void onLoadTimerOverflow(void *)
 {
   static size_t index = 0;
 

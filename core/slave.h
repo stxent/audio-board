@@ -25,7 +25,7 @@ enum
   SLAVE_REG_SPK     = 0x08
 };
 
-struct SlaveRegOverlay
+struct [[gnu::packed]] SlaveRegOverlay
 {
   uint8_t reset;
   uint8_t sys;
@@ -44,7 +44,7 @@ struct SlaveRegOverlay
   uint8_t mic;
   /* SPK level from 0 to 255 */
   uint8_t spk;
-} __attribute__((unused));
+};
 /*------------------Reset control register------------------------------------*/
 #define SLAVE_RESET_RESET               BIT(0)
 /*------------------System control register-----------------------------------*/
