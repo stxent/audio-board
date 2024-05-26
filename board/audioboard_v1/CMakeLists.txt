@@ -6,6 +6,6 @@ set(VERSION_HW_MAJOR 1 PARENT_SCOPE)
 set(VERSION_HW_MINOR 0 PARENT_SCOPE)
 
 # Linker script for an application
-configure_file("memory.ld" "${PROJECT_BINARY_DIR}/application.ld")
+configure_file("memory.ld" "${PROJECT_BINARY_DIR}/memory.ld")
 
 set(FLAGS_LINKER "--specs=nosys.specs --specs=nano.specs -Wl,--gc-sections" PARENT_SCOPE)

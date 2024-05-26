@@ -31,7 +31,7 @@ if(USE_DBG)
 endif()
 
 # Configure HALM library, HALM_CONFIG_FILE should be defined
-set(HALM_CONFIG_FILE "${PROJECT_SOURCE_DIR}/board/${BOARD}/halm.config" CACHE INTERNAL "Path to the library configuration file" FORCE)
+set(HALM_CONFIG_FILE "${PROJECT_SOURCE_DIR}/board/${BOARD}/halm.config" CACHE INTERNAL "" FORCE)
 add_subdirectory(libs/halm halm)
 
 # Configure DPM library
