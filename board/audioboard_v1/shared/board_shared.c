@@ -27,10 +27,11 @@
 /*----------------------------------------------------------------------------*/
 #define BACKUP_MAGIC_WORD 0xB6A617A5UL
 /*----------------------------------------------------------------------------*/
-#define PRI_TIMER_DBG 2
+#define PRI_TIMER_DBG 3
+
+#define PRI_I2C       2
 
 #define PRI_BUTTON    1
-#define PRI_I2C       1
 #define PRI_SERIAL    1
 #define PRI_SPI       1
 
@@ -130,13 +131,13 @@ struct Interface *boardMakeI2CSlave(void)
       .priority = PRI_I2C,
       .channel = 0
   };
-  static const uint32_t address = SLAVE_ADDRESS;
 
   struct Interface * const interface = init(I2CSlave, &i2cSlaveConfig);
 
   if (interface != NULL)
   {
-    const enum Result res = ifSetParam(interface, IF_ADDRESS, &address);
+    const enum Result res = ifSetParam(interface, IF_ADDRESS,
+        &(uint32_t){SLAVE_ADDRESS});
 
     assert(res == E_OK);
     (void)res;
@@ -436,7 +437,7 @@ bool boardSetupClock(void)
   };
   static const struct GenericClockConfig mainClockConfigExt = {
       .source = CLOCK_EXTERNAL,
-      .divisor = 3
+      .divisor = 1
   };
   static const struct ClockOutputConfig outputClockConfig = {
       .source = CLOCK_EXTERNAL,

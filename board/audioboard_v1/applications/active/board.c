@@ -34,18 +34,18 @@ void appBoardInit(struct Board *board)
   board->debug.timer = NULL;
 #endif
 
-  /* Initialize Work Queue */
-  if ((WQ_DEFAULT = init(WorkQueue, &workQueueConfig)) == NULL)
-    ready = false;
+  ready = ready && boardSetupAmpPackage(&board->ampPackage);
+  ready = ready && boardSetupAdcPackage(&board->adcPackage);
+  ready = ready && boardSetupButtonPackage(&board->buttonPackage);
+  ready = ready && boardSetupControlPackage(&board->controlPackage);
 
   /* Initialize Deep-Sleep wake-up logic */
   if ((board->system.wakeup = boardMakeWakeupInt()) == NULL)
     ready = false;
 
-  ready = ready && boardSetupAmpPackage(&board->ampPackage);
-  ready = ready && boardSetupAdcPackage(&board->adcPackage);
-  ready = ready && boardSetupButtonPackage(&board->buttonPackage);
-  ready = ready && boardSetupControlPackage(&board->controlPackage);
+  /* Initialize Work Queue */
+  if ((WQ_DEFAULT = init(WorkQueue, &workQueueConfig)) == NULL)
+    ready = false;
 
   assert(ready);
   (void)ready;

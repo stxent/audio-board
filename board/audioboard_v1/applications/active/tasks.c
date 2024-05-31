@@ -262,9 +262,9 @@ static void onControlUpdateEvent(void *argument)
 static void onConversionCompleted(void *argument)
 {
   /* R1 = 20 kOhm, R2 = 10 kOhm, Vref = 3300 mV */
-  static const uint32_t R1 = 20;
-  static const uint32_t R2 = 10;
-  static const uint32_t V_REF = 3300;
+  static const uint32_t r1Value = 20;
+  static const uint32_t r2Value = 10;
+  static const uint32_t refVoltage = 3300;
 
   struct Board * const board = argument;
   uint16_t sample;
@@ -273,7 +273,7 @@ static void onConversionCompleted(void *argument)
 
   ifRead(board->adcPackage.adc, &sample, sizeof(sample));
 
-  voltage = ((sample * V_REF * (R1 + R2)) / R2) >> 16;
+  voltage = ((sample * refVoltage * (r1Value + r2Value)) / r2Value) >> 16;
   powered = voltage >= VOLTAGE_THRESHOLD;
 
   if (board->system.powered != powered)
@@ -599,7 +599,7 @@ static void slaveUpdateTask(void *argument)
   overlay.ctl &= SLAVE_CTL_MASK;
 
   /* Save the state to a backup memory */
-  boardSaveState(overlay.sys | (overlay.ctl << 8));
+  boardSaveState(overlay.sys | (overlay.ctl << 8) | (overlay.led << 16));
 
   ifWrite(board->system.slave, &overlay, sizeof(overlay));
   board->system.timeout = board->system.autosuspend ? AUTO_SUSPEND_TIMEOUT : 0;
@@ -676,18 +676,15 @@ static void startupTask(void *argument)
       if (boardRecoverState(&state))
       {
         /* Step 2: try to recover previous state */
-
         overlay.sys = (uint8_t)state;
         overlay.ctl = (uint8_t)(state >> 8);
+        overlay.led = (uint8_t)(state >> 16);
       }
       else
       {
         /* Step 3: use board configuration switches */
-
         if (sw & SW_EXT_CLOCK)
           overlay.sys |= SLAVE_SYS_EXT_CLOCK;
-        if (!(sw & SW_LOAD_CONFIG))
-          overlay.ctl |= SLAVE_CTL_POWER;
         if (sw & SW_OUTPUT_GAIN_BOOST)
           overlay.ctl |= SLAVE_CTL_GAIN0 | SLAVE_CTL_GAIN1;
       }
