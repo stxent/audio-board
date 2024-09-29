@@ -343,7 +343,6 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
     package->timers[i] = timerFactoryCreate(package->factory);
     if (package->timers[i] == NULL)
       return false;
-    timerSetOverflow(package->timers[i], 2);
 
     const struct ButtonConfig buttonConfig = {
         .interrupt = package->events[i],

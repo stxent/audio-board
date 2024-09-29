@@ -40,4 +40,4 @@ Useful settings
 * CMAKE_BUILD_TYPE — specifies the build type. Possible values are empty, Debug, Release, RelWithDebInfo and MinSizeRel.
 * USE_DBG — enables debug messages and profiling.
 * USE_LTO — enables Link Time Optimization.
-* USE_WDT — explicitly enables a watchdog timer for all build types.
+* USE_WDT — enables Watchdog Timer.
