@@ -67,17 +67,21 @@ static void onLoadTimerOverflow(void *);
 /*----------------------------------------------------------------------------*/
 static void codecLoadDefaultSettings(struct Board *board)
 {
+  board->config.inputChannels = BOARD_AUDIO_INPUT_CH_A;
   board->config.inputLevel = MAX_LEVEL >> 1;
-  board->config.inputPath = BOARD_AUDIO_INPUT_A;
+  board->config.inputPath = BOARD_AUDIO_INPUT_PATH_A;
+  board->config.outputChannels = BOARD_AUDIO_OUTPUT_CH_A;
   board->config.outputLevel = MAX_LEVEL >> 1;
-  board->config.outputPath = BOARD_AUDIO_OUTPUT_A;
+  board->config.outputPath = BOARD_AUDIO_OUTPUT_PATH_A;
 }
 /*----------------------------------------------------------------------------*/
 static void codecLoadSettings(struct Board *board,
     const struct Settings *settings)
 {
+  board->config.inputChannels = CHANNEL_BOTH;
   board->config.inputLevel = gainToLevel(settings->codecInputLevel);
   board->config.inputPath = settings->codecInputPath;
+  board->config.outputChannels = CHANNEL_BOTH;
   board->config.outputLevel = gainToLevel(settings->codecOutputLevel);
   board->config.outputPath = settings->codecOutputPath;
 }
@@ -144,11 +148,11 @@ static void slaveLoadSettings(struct SlaveRegOverlay *overlay,
 
   switch (settings->codecInputPath)
   {
-    case BOARD_AUDIO_INPUT_A:
+    case BOARD_AUDIO_INPUT_PATH_A:
       overlay->path |= SLAVE_PATH_INPUT(1);
       break;
 
-    case BOARD_AUDIO_INPUT_B:
+    case BOARD_AUDIO_INPUT_PATH_B:
       overlay->path |= SLAVE_PATH_INPUT(2);
       break;
 
@@ -158,11 +162,11 @@ static void slaveLoadSettings(struct SlaveRegOverlay *overlay,
 
   switch (settings->codecOutputPath)
   {
-    case BOARD_AUDIO_OUTPUT_A:
+    case BOARD_AUDIO_OUTPUT_PATH_A:
       overlay->path |= SLAVE_PATH_OUTPUT(1);
       break;
 
-    case BOARD_AUDIO_OUTPUT_B:
+    case BOARD_AUDIO_OUTPUT_PATH_B:
       overlay->path |= SLAVE_PATH_OUTPUT(2);
       break;
 
@@ -181,11 +185,11 @@ static void slaveStoreSettings(struct Settings *settings,
   switch (SLAVE_PATH_INPUT_VALUE(overlay->path))
   {
     case 1:
-      settings->codecInputPath = BOARD_AUDIO_INPUT_A;
+      settings->codecInputPath = BOARD_AUDIO_INPUT_PATH_A;
       break;
 
     case 2:
-      settings->codecInputPath = BOARD_AUDIO_INPUT_B;
+      settings->codecInputPath = BOARD_AUDIO_INPUT_PATH_B;
       break;
 
     default:
@@ -196,11 +200,11 @@ static void slaveStoreSettings(struct Settings *settings,
   switch (SLAVE_PATH_OUTPUT_VALUE(overlay->path))
   {
     case 1:
-      settings->codecOutputPath = BOARD_AUDIO_OUTPUT_A;
+      settings->codecOutputPath = BOARD_AUDIO_OUTPUT_PATH_A;
       break;
 
     case 2:
-      settings->codecOutputPath = BOARD_AUDIO_OUTPUT_B;
+      settings->codecOutputPath = BOARD_AUDIO_OUTPUT_PATH_B;
       break;
 
     default:
@@ -299,16 +303,19 @@ static void onMicPressed(void *argument)
 
   switch (board->config.inputPath)
   {
-    case BOARD_AUDIO_INPUT_A:
-      board->config.inputPath = BOARD_AUDIO_INPUT_B;
+    case BOARD_AUDIO_INPUT_PATH_A:
+      board->config.inputChannels = BOARD_AUDIO_INPUT_CH_B;
+      board->config.inputPath = BOARD_AUDIO_INPUT_PATH_B;
       break;
 
-    case BOARD_AUDIO_INPUT_B:
-      board->config.inputPath = BOARD_AUDIO_INPUT_A;
+    case BOARD_AUDIO_INPUT_PATH_B:
+      board->config.inputChannels = BOARD_AUDIO_INPUT_CH_A;
+      board->config.inputPath = BOARD_AUDIO_INPUT_PATH_A;
       break;
 
     default:
-      board->config.inputPath = BOARD_AUDIO_INPUT_A;
+      board->config.inputChannels = CHANNEL_NONE;
+      board->config.inputPath = AIC3X_NONE;
       break;
   }
 
@@ -338,15 +345,18 @@ static void onSpkPressed(void *argument)
 
   switch (board->config.outputPath)
   {
-    case BOARD_AUDIO_OUTPUT_A:
-      board->config.outputPath = BOARD_AUDIO_OUTPUT_B;
+    case BOARD_AUDIO_OUTPUT_PATH_A:
+      board->config.outputChannels = BOARD_AUDIO_OUTPUT_CH_B;
+      board->config.outputPath = BOARD_AUDIO_OUTPUT_PATH_B;
       break;
 
-    case BOARD_AUDIO_OUTPUT_B:
-      board->config.outputPath = BOARD_AUDIO_OUTPUT_A;
+    case BOARD_AUDIO_OUTPUT_PATH_B:
+      board->config.outputChannels = BOARD_AUDIO_OUTPUT_CH_A;
+      board->config.outputPath = BOARD_AUDIO_OUTPUT_PATH_A;
       break;
 
     default:
+      board->config.outputChannels = CHANNEL_NONE;
       board->config.outputPath = AIC3X_NONE;
       break;
   }
@@ -475,9 +485,9 @@ static void ledUpdateTask(void *argument)
 
     if (board->config.mode != MODE_MIC)
     {
-      if (board->config.inputPath == BOARD_AUDIO_INPUT_A)
+      if (board->config.inputPath == BOARD_AUDIO_INPUT_PATH_A)
         value |= 0x80;
-      else if (board->config.inputPath == BOARD_AUDIO_INPUT_B)
+      else if (board->config.inputPath == BOARD_AUDIO_INPUT_PATH_B)
         value |= 0x40;
     }
     else if (enabled)
@@ -487,9 +497,9 @@ static void ledUpdateTask(void *argument)
 
     if (board->config.mode != MODE_SPK)
     {
-      if (board->config.outputPath == BOARD_AUDIO_OUTPUT_A)
+      if (board->config.outputPath == BOARD_AUDIO_OUTPUT_PATH_A)
         value |= 0x10;
-      else if (board->config.outputPath == BOARD_AUDIO_OUTPUT_B)
+      else if (board->config.outputPath == BOARD_AUDIO_OUTPUT_PATH_B)
         value |= 0x20;
     }
     else if (enabled)
@@ -511,7 +521,8 @@ static void micUpdateTask(void *argument)
 
   board->event.codec = false;
 
-  codecSetInputPath(board->codecPackage.codec, board->config.inputPath);
+  codecSetInputPath(board->codecPackage.codec, board->config.inputPath,
+      board->config.inputChannels);
 
   if (!board->event.show)
   {
@@ -611,12 +622,13 @@ static void spkUpdateTask(void *argument)
 
   board->event.codec = false;
 
-  if (board->config.outputPath == BOARD_AUDIO_OUTPUT_B)
+  if (board->config.outputPath == BOARD_AUDIO_OUTPUT_PATH_B)
     pinSet(board->ampPackage.power);
   else
     pinReset(board->ampPackage.power);
 
-  codecSetOutputPath(board->codecPackage.codec, board->config.outputPath);
+  codecSetOutputPath(board->codecPackage.codec, board->config.outputPath,
+      board->config.outputChannels);
 
   if (!board->event.show)
   {
@@ -786,15 +798,8 @@ static void volumeUpdateTask(void *argument)
 
   if (board->config.inputPath != AIC3X_NONE)
   {
-    const uint8_t gain = levelToGain(board->config.inputLevel);
-
-    if (board->config.inputPath == BOARD_AUDIO_INPUT_A)
-    {
-      codecSetInputGain(board->codecPackage.codec, CHANNEL_LEFT, gain);
-      codecSetInputGain(board->codecPackage.codec, CHANNEL_RIGHT, 0);
-    }
-    else
-      codecSetInputGain(board->codecPackage.codec, CHANNEL_BOTH, gain);
+    codecSetInputGain(board->codecPackage.codec, CHANNEL_BOTH,
+        levelToGain(board->config.inputLevel));
   }
   if (board->config.outputPath != AIC3X_NONE)
   {

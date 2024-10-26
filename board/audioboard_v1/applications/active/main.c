@@ -18,7 +18,7 @@ int main(void)
    * 1090898 for 12 MHz
    *  363625 for  4 MHz
    */
-  board->debug.idle = 363625;
+  board->debug.idle = 1090898;
 #endif
 
   invokeStartupTask(board);

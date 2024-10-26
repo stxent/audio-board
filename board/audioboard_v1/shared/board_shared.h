@@ -17,27 +17,31 @@ struct Timer;
 struct Watchdog;
 struct WorkQueue;
 /*----------------------------------------------------------------------------*/
-#define BOARD_ADC_PIN           PIN(1, 10)
-#define BOARD_BUTTON_MIC_PIN    PIN(0, 7)
-#define BOARD_BUTTON_SPK_PIN    PIN(1, 8)
-#define BOARD_BUTTON_VOL_M_PIN  PIN(1, 11)
-#define BOARD_BUTTON_VOL_P_PIN  PIN(0, 2)
-#define BOARD_LED_PIN           PIN(1, 2)
-#define BOARD_SPI_CS0_PIN       PIN(0, 3)
-#define BOARD_SPI_CS1_PIN       PIN(1, 4)
-#define BOARD_SPI_EN1_PIN       PIN(3, 2)
+#define BOARD_ADC_PIN                   PIN(1, 10)
+#define BOARD_BUTTON_MIC_PIN            PIN(0, 7)
+#define BOARD_BUTTON_SPK_PIN            PIN(1, 8)
+#define BOARD_BUTTON_VOL_M_PIN          PIN(1, 11)
+#define BOARD_BUTTON_VOL_P_PIN          PIN(0, 2)
+#define BOARD_LED_PIN                   PIN(1, 2)
+#define BOARD_SPI_CS0_PIN               PIN(0, 3)
+#define BOARD_SPI_CS1_PIN               PIN(1, 4)
+#define BOARD_SPI_EN1_PIN               PIN(3, 2)
 
-#define BOARD_AMP_GAIN0_PIN     PIN(3, 4)
-#define BOARD_AMP_GAIN1_PIN     PIN(3, 5)
-#define BOARD_AMP_POWER_PIN     PIN(1, 9)
-#define BOARD_I2S_CLK_PIN       PIN(0, 1)
-#define BOARD_I2S_MUX_PIN       PIN(2, 0)
-#define BOARD_I2S_RST_PIN       PIN(1, 5)
+#define BOARD_AMP_GAIN0_PIN             PIN(3, 4)
+#define BOARD_AMP_GAIN1_PIN             PIN(3, 5)
+#define BOARD_AMP_POWER_PIN             PIN(1, 9)
+#define BOARD_I2S_CLK_PIN               PIN(0, 1)
+#define BOARD_I2S_MUX_PIN               PIN(2, 0)
+#define BOARD_I2S_RST_PIN               PIN(1, 5)
 
-#define BOARD_AUDIO_INPUT_A     AIC3X_MIC_1_IN
-#define BOARD_AUDIO_INPUT_B     AIC3X_LINE_2_IN
-#define BOARD_AUDIO_OUTPUT_A    AIC3X_HP_OUT_DIFF
-#define BOARD_AUDIO_OUTPUT_B    AIC3X_LINE_OUT_DIFF
+#define BOARD_AUDIO_INPUT_CH_A          CHANNEL_LEFT
+#define BOARD_AUDIO_INPUT_PATH_A        AIC3X_MIC_1_IN
+#define BOARD_AUDIO_INPUT_CH_B          CHANNEL_BOTH
+#define BOARD_AUDIO_INPUT_PATH_B        AIC3X_LINE_2_IN
+#define BOARD_AUDIO_OUTPUT_CH_A         CHANNEL_LEFT
+#define BOARD_AUDIO_OUTPUT_PATH_A       AIC3X_HP_OUT_DIFF
+#define BOARD_AUDIO_OUTPUT_CH_B         CHANNEL_BOTH
+#define BOARD_AUDIO_OUTPUT_PATH_B       AIC3X_LINE_OUT_DIFF
 
 struct AdcPackage
 {

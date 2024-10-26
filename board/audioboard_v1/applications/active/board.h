@@ -32,6 +32,8 @@ struct Board
     struct Interface *memory;
 
     enum VolumeControlMode mode;
+    enum CodecChannel inputChannels;
+    enum CodecChannel outputChannels;
     enum AIC3xPath inputPath;
     enum AIC3xPath outputPath;
     uint8_t inputLevel;

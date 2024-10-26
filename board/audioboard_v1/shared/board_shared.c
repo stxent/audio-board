@@ -95,6 +95,7 @@ struct Entity *boardMakeCodec(struct WorkQueue *wq, struct Interface *i2c,
       .timer = timer,
       .address = 0x18,
       .rate = 0,
+      .samplerate = 44100,
       .prescaler = prescaler,
       .reset = BOARD_I2S_RST_PIN
   };
@@ -103,7 +104,7 @@ struct Entity *boardMakeCodec(struct WorkQueue *wq, struct Interface *i2c,
   if (codec != NULL)
   {
     codecSetUpdateWorkQueue(codec, wq);
-    codecReset(codec, 44100, AIC3X_NONE, AIC3X_NONE);
+    codecReset(codec);
   }
 
   return (struct Entity *)codec;
@@ -136,11 +137,9 @@ struct Interface *boardMakeI2CSlave(void)
 
   if (interface != NULL)
   {
-    const enum Result res = ifSetParam(interface, IF_ADDRESS,
+    [[maybe_unused]] const enum Result res = ifSetParam(interface, IF_ADDRESS,
         &(uint32_t){SLAVE_ADDRESS});
-
     assert(res == E_OK);
-    (void)res;
   }
 
   return interface;
