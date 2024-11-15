@@ -17,8 +17,10 @@ struct [[gnu::packed]] Settings
   uint8_t magic;
 
   uint8_t codecInputAGCEnabled;
+  uint8_t codecInputChannels;
   uint8_t codecInputLevel;
   uint8_t codecInputPath;
+  uint8_t codecOutputChannels;
   uint8_t codecOutputLevel;
   uint8_t codecOutputPath;
 

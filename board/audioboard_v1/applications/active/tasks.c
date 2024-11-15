@@ -68,20 +68,20 @@ static void onLoadTimerOverflow(void *);
 static void codecLoadDefaultSettings(struct Board *board)
 {
   board->config.inputChannels = BOARD_AUDIO_INPUT_CH_A;
-  board->config.inputLevel = MAX_LEVEL >> 1;
+  board->config.inputLevel = 1;
   board->config.inputPath = BOARD_AUDIO_INPUT_PATH_A;
   board->config.outputChannels = BOARD_AUDIO_OUTPUT_CH_A;
-  board->config.outputLevel = MAX_LEVEL >> 1;
+  board->config.outputLevel = 1;
   board->config.outputPath = BOARD_AUDIO_OUTPUT_PATH_A;
 }
 /*----------------------------------------------------------------------------*/
 static void codecLoadSettings(struct Board *board,
     const struct Settings *settings)
 {
-  board->config.inputChannels = CHANNEL_BOTH;
+  board->config.inputChannels = settings->codecInputChannels;
   board->config.inputLevel = gainToLevel(settings->codecInputLevel);
   board->config.inputPath = settings->codecInputPath;
-  board->config.outputChannels = CHANNEL_BOTH;
+  board->config.outputChannels = settings->codecOutputChannels;
   board->config.outputLevel = gainToLevel(settings->codecOutputLevel);
   board->config.outputPath = settings->codecOutputPath;
 }
@@ -99,13 +99,13 @@ static inline uint8_t levelToBar(uint8_t level)
   {
     case 4:
       result |= 0x01;
-      /* Fall through */
+      [[fallthrough]];
     case 3:
       result |= 0x02;
-      /* Fall through */
+      [[fallthrough]];
     case 2:
       result |= 0x04;
-      /* Fall through */
+      [[fallthrough]];
     case 1:
       result |= 0x08;
       break;
@@ -149,11 +149,11 @@ static void slaveLoadSettings(struct SlaveRegOverlay *overlay,
   switch (settings->codecInputPath)
   {
     case BOARD_AUDIO_INPUT_PATH_A:
-      overlay->path |= SLAVE_PATH_INPUT(1);
+      overlay->path |= SLAVE_PATH_INPUT(SLAVE_PATH_INT);
       break;
 
     case BOARD_AUDIO_INPUT_PATH_B:
-      overlay->path |= SLAVE_PATH_INPUT(2);
+      overlay->path |= SLAVE_PATH_INPUT(SLAVE_PATH_EXT);
       break;
 
     default:
@@ -163,11 +163,11 @@ static void slaveLoadSettings(struct SlaveRegOverlay *overlay,
   switch (settings->codecOutputPath)
   {
     case BOARD_AUDIO_OUTPUT_PATH_A:
-      overlay->path |= SLAVE_PATH_OUTPUT(1);
+      overlay->path |= SLAVE_PATH_OUTPUT(SLAVE_PATH_INT);
       break;
 
     case BOARD_AUDIO_OUTPUT_PATH_B:
-      overlay->path |= SLAVE_PATH_OUTPUT(2);
+      overlay->path |= SLAVE_PATH_OUTPUT(SLAVE_PATH_EXT);
       break;
 
     default:
@@ -184,30 +184,36 @@ static void slaveStoreSettings(struct Settings *settings,
 {
   switch (SLAVE_PATH_INPUT_VALUE(overlay->path))
   {
-    case 1:
+    case SLAVE_PATH_INT:
+      settings->codecInputChannels = BOARD_AUDIO_INPUT_CH_A;
       settings->codecInputPath = BOARD_AUDIO_INPUT_PATH_A;
       break;
 
-    case 2:
+    case SLAVE_PATH_EXT:
+      settings->codecInputChannels = BOARD_AUDIO_INPUT_CH_B;
       settings->codecInputPath = BOARD_AUDIO_INPUT_PATH_B;
       break;
 
     default:
+      settings->codecInputChannels = CHANNEL_NONE;
       settings->codecInputPath = AIC3X_NONE;
       break;
   }
 
   switch (SLAVE_PATH_OUTPUT_VALUE(overlay->path))
   {
-    case 1:
+    case SLAVE_PATH_INT:
+      settings->codecOutputChannels = BOARD_AUDIO_OUTPUT_CH_A;
       settings->codecOutputPath = BOARD_AUDIO_OUTPUT_PATH_A;
       break;
 
-    case 2:
+    case SLAVE_PATH_EXT:
+      settings->codecOutputChannels = BOARD_AUDIO_OUTPUT_CH_B;
       settings->codecOutputPath = BOARD_AUDIO_OUTPUT_PATH_B;
       break;
 
     default:
+      settings->codecOutputChannels = CHANNEL_NONE;
       settings->codecOutputPath = AIC3X_NONE;
       break;
   }
@@ -299,8 +305,6 @@ static void onMicPressed(void *argument)
 {
   struct Board * const board = argument;
 
-  // TODO Long press to disable
-
   switch (board->config.inputPath)
   {
     case BOARD_AUDIO_INPUT_PATH_A:
@@ -340,9 +344,6 @@ static void onSlaveUpdateEvent(void *argument)
 static void onSpkPressed(void *argument)
 {
   struct Board * const board = argument;
-
-  // TODO Long press to disable
-
   switch (board->config.outputPath)
   {
     case BOARD_AUDIO_OUTPUT_PATH_A:
@@ -798,13 +799,17 @@ static void volumeUpdateTask(void *argument)
 
   if (board->config.inputPath != AIC3X_NONE)
   {
-    codecSetInputGain(board->codecPackage.codec, CHANNEL_BOTH,
+    codecSetInputGain(board->codecPackage.codec, CHANNEL_LEFT | CHANNEL_RIGHT,
         levelToGain(board->config.inputLevel));
+    codecSetInputMute(board->codecPackage.codec, board->config.inputLevel ?
+        CHANNEL_NONE : (CHANNEL_LEFT | CHANNEL_RIGHT));
   }
   if (board->config.outputPath != AIC3X_NONE)
   {
-    codecSetOutputGain(board->codecPackage.codec, CHANNEL_BOTH,
+    codecSetOutputGain(board->codecPackage.codec, CHANNEL_LEFT | CHANNEL_RIGHT,
         levelToGain(board->config.outputLevel));
+    codecSetOutputMute(board->codecPackage.codec, board->config.outputLevel ?
+        CHANNEL_NONE : (CHANNEL_LEFT | CHANNEL_RIGHT));
   }
 
   if (!board->event.show)

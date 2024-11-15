@@ -97,7 +97,8 @@ struct Entity *boardMakeCodec(struct WorkQueue *wq, struct Interface *i2c,
       .rate = 0,
       .samplerate = 44100,
       .prescaler = prescaler,
-      .reset = BOARD_I2S_RST_PIN
+      .reset = BOARD_I2S_RST_PIN,
+      .type = AIC3X_TYPE_3104
   };
   struct TLV320AIC3x * const codec = init(TLV320AIC3x, &codecConfig);
 

@@ -61,6 +61,12 @@ struct [[gnu::packed]] SlaveRegOverlay
 /*------------------Status register-------------------------------------------*/
 #define SLAVE_STATUS_POWER_READY        BIT(0)
 /*------------------Path control register-------------------------------------*/
+enum
+{
+  SLAVE_PATH_INT = 1,
+  SLAVE_PATH_EXT = 2
+};
+
 #define SLAVE_PATH_OUTPUT(value)        BIT_FIELD((value), 0)
 #define SLAVE_PATH_OUTPUT_MASK          BIT_FIELD(MASK(2), 0)
 #define SLAVE_PATH_OUTPUT_VALUE(reg) \
@@ -71,6 +77,7 @@ struct [[gnu::packed]] SlaveRegOverlay
 #define SLAVE_PATH_INPUT_VALUE(reg) \
     FIELD_VALUE((reg), SLAVE_PATH_INPUT_MASK, 2)
 
-#define SLAVE_PATH_MASK                 MASK(4)
+#define SLAVE_PATH_INPUT_AGC            BIT(4)
+#define SLAVE_PATH_MASK                 MASK(5)
 /*----------------------------------------------------------------------------*/
 #endif /* CORE_SLAVE_H_ */
