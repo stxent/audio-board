@@ -12,8 +12,8 @@
 /*----------------------------------------------------------------------------*/
 struct Interface;
 struct Interrupt;
-struct SoftwareTimerFactory;
 struct Timer;
+struct TimerFactory;
 struct Watchdog;
 struct WorkQueue;
 /*----------------------------------------------------------------------------*/
@@ -58,12 +58,15 @@ struct AmpPackage
 
 struct ButtonPackage
 {
-  struct Timer *base;
-  struct SoftwareTimerFactory *factory;
-
   struct Interrupt *buttons[4];
   struct Interrupt *events[4];
   struct Timer *timers[4];
+};
+
+struct ChronoPackage
+{
+  struct Timer *base;
+  struct TimerFactory *factory;
 };
 
 struct CodecPackage
@@ -105,10 +108,11 @@ bool boardRecoverState(uint32_t *);
 void boardSaveState(uint32_t);
 bool boardSetupAdcPackage(struct AdcPackage *);
 bool boardSetupAmpPackage(struct AmpPackage *);
-bool boardSetupButtonPackage(struct ButtonPackage *);
+bool boardSetupButtonPackage(struct ButtonPackage *, struct TimerFactory *);
+bool boardSetupChronoPackage(struct ChronoPackage *);
 bool boardSetupCodecPackage(struct CodecPackage *, struct WorkQueue *, bool,
     bool);
-bool boardSetupControlPackage(struct ControlPackage *);
+bool boardSetupControlPackage(struct ControlPackage *, struct TimerFactory *);
 void boardResetClock(void);
 bool boardSetupClock(void);
 

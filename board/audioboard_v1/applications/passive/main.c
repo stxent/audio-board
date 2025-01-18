@@ -18,6 +18,7 @@ static void showStatus(struct Interface *spi, struct Pin cs, uint8_t value)
 int main(void)
 {
   struct AmpPackage ampPackage;
+  struct ChronoPackage chronoPackage;
   struct CodecPackage codecPackage;
   struct ControlPackage controlPackage;
 
@@ -26,9 +27,10 @@ int main(void)
   const struct Pin led = pinInit(BOARD_LED_PIN);
   pinOutput(led, false);
 
+  boardSetupChronoPackage(&chronoPackage);
   boardSetupAmpPackage(&ampPackage);
   boardSetupCodecPackage(&codecPackage, NULL, false, false);
-  boardSetupControlPackage(&controlPackage);
+  boardSetupControlPackage(&controlPackage, chronoPackage.factory);
 
   showStatus(controlPackage.spi, controlPackage.csW, 0);
 

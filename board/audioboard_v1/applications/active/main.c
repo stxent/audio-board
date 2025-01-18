@@ -15,10 +15,10 @@ int main(void)
 
 #ifdef ENABLE_DBG
   /*
-   * 1090898 for 12 MHz
+   * 1090897 for 12 MHz
    *  363625 for  4 MHz
    */
-  board->debug.idle = 1090898;
+  board->debug.idle = 1090897;
 #endif
 
   invokeStartupTask(board);

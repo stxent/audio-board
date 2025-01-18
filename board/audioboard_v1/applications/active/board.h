@@ -23,6 +23,7 @@ struct Board
   struct AdcPackage adcPackage;
   struct AmpPackage ampPackage;
   struct ButtonPackage buttonPackage;
+  struct ChronoPackage chronoPackage;
   struct CodecPackage codecPackage;
   struct ControlPackage controlPackage;
 
@@ -63,6 +64,8 @@ struct Board
     struct Interrupt *wakeup;
     struct Watchdog *watchdog;
 
+    /* Bus retries */
+    uint8_t retries;
     /* Current switch state */
     uint8_t sw;
     /* Autosuspend function timeout */

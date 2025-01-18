@@ -9,7 +9,7 @@
 #include <assert.h>
 /*----------------------------------------------------------------------------*/
 static const struct WorkQueueConfig workQueueConfig = {
-    .size = 4
+    .size = 8
 };
 /*----------------------------------------------------------------------------*/
 void appBoardInit(struct Board *board)
@@ -34,10 +34,13 @@ void appBoardInit(struct Board *board)
   board->debug.timer = NULL;
 #endif
 
+  ready = ready && boardSetupChronoPackage(&board->chronoPackage);
   ready = ready && boardSetupAmpPackage(&board->ampPackage);
   ready = ready && boardSetupAdcPackage(&board->adcPackage);
-  ready = ready && boardSetupButtonPackage(&board->buttonPackage);
-  ready = ready && boardSetupControlPackage(&board->controlPackage);
+  ready = ready && boardSetupButtonPackage(&board->buttonPackage,
+      board->chronoPackage.factory);
+  ready = ready && boardSetupControlPackage(&board->controlPackage,
+      board->chronoPackage.factory);
 
   /* Initialize Deep-Sleep wake-up logic */
   if ((board->system.wakeup = boardMakeWakeupInt()) == NULL)
@@ -66,6 +69,7 @@ void appBoardInit(struct Board *board)
   board->event.slave = false;
   board->event.suspend = false;
 
+  board->system.retries = 0;
   board->system.slave = NULL;
   board->system.sw = 0;
   board->system.timeout = 0;

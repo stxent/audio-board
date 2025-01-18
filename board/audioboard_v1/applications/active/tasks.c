@@ -10,6 +10,7 @@
 #include "slave.h"
 #include "tasks.h"
 #include <halm/core/cortex/nvic.h>
+#include <halm/generic/i2c.h>
 #include <halm/generic/work_queue.h>
 #include <halm/interrupt.h>
 #include <halm/pm.h>
@@ -21,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 /*----------------------------------------------------------------------------*/
+#define BUS_MAX_RETRIES       100
 #define CONTROL_UPDATE_RATE   10
 
 #define AUTO_SUSPEND_TIMEOUT  (5 * CONTROL_UPDATE_RATE)
@@ -43,6 +45,8 @@ static void slaveStoreSettings(struct Settings *,
     const struct SlaveRegOverlay *);
 static void writeLedState(struct Board *, uint8_t);
 
+static void onBusError(void *);
+static void onBusIdle(void *);
 static void onControlUpdateEvent(void *);
 static void onConversionCompleted(void *);
 static void onMicPressed(void *);
@@ -229,9 +233,51 @@ static void writeLedState(struct Board *board, uint8_t state)
   pinSet(board->controlPackage.csW);
 }
 /*----------------------------------------------------------------------------*/
+static void onBusError(void *argument)
+{
+  struct Board * const board = argument;
+
+#ifdef ENABLE_DBG
+  size_t count;
+  char text[64];
+
+  count = sprintf(text, "Bus error, retry %u\r\n",
+      (unsigned int)board->system.retries);
+  ifWrite(board->debug.serial, text, count);
+#endif
+
+  ifSetParam(board->codecPackage.i2c, IF_I2C_BUS_RECOVERY, NULL);
+
+  if (board->system.retries < BUS_MAX_RETRIES)
+  {
+    ++board->system.retries;
+    codecReset(board->codecPackage.codec);
+  }
+}
+/*----------------------------------------------------------------------------*/
+static void onBusIdle(void *argument)
+{
+  struct Board * const board = argument;
+
+  if (board->system.retries)
+  {
+    board->system.retries = 0;
+
+    micUpdateTask(board);
+    spkUpdateTask(board);
+    volumeUpdateTask(board);
+  }
+}
+/*----------------------------------------------------------------------------*/
 static void onControlUpdateEvent(void *argument)
 {
   struct Board * const board = argument;
+
+  if (board->codecPackage.codec != NULL)
+  {
+    /* Read and verify codec configuration */
+    codecCheck(board->codecPackage.codec);
+  }
 
   if (board->system.slave == NULL)
   {
@@ -267,6 +313,9 @@ static void onControlUpdateEvent(void *argument)
     else
       --board->system.timeout;
   }
+
+  if (board->system.watchdog != NULL)
+    watchdogReload(board->system.watchdog);
 }
 /*----------------------------------------------------------------------------*/
 static void onConversionCompleted(void *argument)
@@ -296,9 +345,6 @@ static void onConversionCompleted(void *argument)
         board->event.slave = true;
     }
   }
-
-  if (board->system.watchdog != NULL)
-    watchdogReload(board->system.watchdog);
 }
 /*----------------------------------------------------------------------------*/
 static void onMicPressed(void *argument)
@@ -660,7 +706,12 @@ static void startupTask(void *argument)
   {
     const bool pll = (sw & SW_EXT_CLOCK) == 0;
 
-    if (!boardSetupCodecPackage(&board->codecPackage, WQ_DEFAULT, true, pll))
+    if (boardSetupCodecPackage(&board->codecPackage, WQ_DEFAULT, true, pll))
+    {
+      codecSetErrorCallback(board->codecPackage.codec, onBusError, board);
+      codecSetIdleCallback(board->codecPackage.codec, onBusIdle, board);
+    }
+    else
       ready = false;
 
     switchReadTask(board);
@@ -727,7 +778,6 @@ static void startupTask(void *argument)
     interruptEnable(board->buttonPackage.buttons[2]);
     interruptSetCallback(board->buttonPackage.buttons[3], onVolPPressed, board);
     interruptEnable(board->buttonPackage.buttons[3]);
-    timerEnable(board->buttonPackage.base);
   }
 
   timerSetOverflow(board->controlPackage.timer,
@@ -741,6 +791,9 @@ static void startupTask(void *argument)
   timerSetOverflow(board->adcPackage.timer,
       timerGetFrequency(board->adcPackage.timer) / (CONTROL_UPDATE_RATE * 2));
   timerEnable(board->adcPackage.timer);
+
+  /* Enable base timer factory timer */
+  timerEnable(board->chronoPackage.base);
 
 #ifdef ENABLE_DBG
   /* 24-bit SysTick timer is used for debug purposes */

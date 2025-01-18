@@ -274,7 +274,8 @@ bool boardSetupAmpPackage(struct AmpPackage *package)
   return true;
 }
 /*----------------------------------------------------------------------------*/
-bool boardSetupButtonPackage(struct ButtonPackage *package)
+bool boardSetupButtonPackage(struct ButtonPackage *package,
+    struct TimerFactory *factory)
 {
   static const struct PinIntConfig buttonIntConfigs[] = {
       /* MIC */
@@ -302,11 +303,6 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
           .pull = PIN_PULLUP
       }
   };
-  static const struct GpTimerConfig buttonTimerConfig = {
-      .frequency = 1000,
-      .priority = PRI_BUTTON,
-      .channel = GPTIMER_CT16B0
-  };
 
   static_assert(ARRAY_SIZE(buttonIntConfigs) == ARRAY_SIZE(package->buttons),
       "Incorrect button count");
@@ -315,8 +311,6 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
   static_assert(ARRAY_SIZE(buttonIntConfigs) == ARRAY_SIZE(package->timers),
       "Incorrect timer count");
 
-  package->factory = NULL;
-
   for (size_t i = 0; i < ARRAY_SIZE(buttonIntConfigs); ++i)
   {
     package->buttons[i] = NULL;
@@ -324,23 +318,13 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
     package->timers[i] = NULL;
   }
 
-  package->base = init(GpTimer, &buttonTimerConfig);
-  if (package->base == NULL)
-    return false;
-  timerSetOverflow(package->base, 5);
-
-  package->factory = init(TimerFactory,
-      &(struct TimerFactoryConfig){package->base});
-  if (package->factory == NULL)
-    return false;
-
   for (size_t i = 0; i < ARRAY_SIZE(buttonIntConfigs); ++i)
   {
     package->events[i] = init(PinInt, &buttonIntConfigs[i]);
     if (package->events[i] == NULL)
       return false;
 
-    package->timers[i] = timerFactoryCreate(package->factory);
+    package->timers[i] = timerFactoryCreate(factory);
     if (package->timers[i] == NULL)
       return false;
 
@@ -355,6 +339,29 @@ bool boardSetupButtonPackage(struct ButtonPackage *package)
     if (package->buttons[i] == NULL)
       return false;
   }
+
+  return true;
+}
+/*----------------------------------------------------------------------------*/
+bool boardSetupChronoPackage(struct ChronoPackage *package)
+{
+  static const struct GpTimerConfig baseTimerConfig = {
+      .frequency = 1000,
+      .priority = PRI_BUTTON,
+      .channel = GPTIMER_CT16B0
+  };
+
+  package->factory = NULL;
+
+  package->base = init(GpTimer, &baseTimerConfig);
+  if (package->base == NULL)
+    return false;
+  timerSetOverflow(package->base, 5);
+
+  package->factory = init(TimerFactory,
+      &(struct TimerFactoryConfig){package->base});
+  if (package->factory == NULL)
+    return false;
 
   return true;
 }
@@ -393,7 +400,8 @@ bool boardSetupCodecPackage(struct CodecPackage *package, struct WorkQueue *wq,
   return true;
 }
 /*----------------------------------------------------------------------------*/
-bool boardSetupControlPackage(struct ControlPackage *package)
+bool boardSetupControlPackage(struct ControlPackage *package,
+    struct TimerFactory *factory)
 {
   package->csR = pinStub();
   package->csW = pinStub();
@@ -413,7 +421,7 @@ bool boardSetupControlPackage(struct ControlPackage *package)
   if (package->spi == NULL)
     return false;
 
-  package->timer = boardMakeControlTimer();
+  package->timer = timerFactoryCreate(factory);
   return package->timer != NULL;
 }
 /*----------------------------------------------------------------------------*/
