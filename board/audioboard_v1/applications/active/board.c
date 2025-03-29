@@ -5,56 +5,55 @@
  */
 
 #include "board.h"
-#include <halm/generic/work_queue.h>
-#include <assert.h>
+#include <halm/delay.h>
+#include <halm/wq.h>
 /*----------------------------------------------------------------------------*/
-static const struct WorkQueueConfig workQueueConfig = {
-    .size = 8
-};
+static void panic(struct Pin);
+/*----------------------------------------------------------------------------*/
+static void panic(struct Pin led)
+{
+  while (1)
+  {
+    mdelay(500);
+    pinToggle(led);
+  }
+}
 /*----------------------------------------------------------------------------*/
 void appBoardInit(struct Board *board)
 {
-  bool ready = boardSetupClock();
+  const bool ready = boardSetupClock();
+
+  board->indication.red = pinInit(BOARD_LED_PIN);
+  pinOutput(board->indication.red, !BOARD_LED_INV);
+
+  if (!ready)
+    panic(board->indication.red);
 
 #ifdef ENABLE_WDT
   /* Enable watchdog prior to all other peripherals */
-  if ((board->system.watchdog = boardMakeWatchdog()) == NULL)
-    ready = false;
+  board->system.watchdog = boardMakeWatchdog();
 #else
   board->system.watchdog = NULL;
 #endif
 
+  /* Initialize Work Queue */
+  boardSetupDefaultWQ();
+
 #ifdef ENABLE_DBG
-  if ((board->debug.serial = boardMakeSerial()) == NULL)
-    ready = false;
-  if ((board->debug.timer = boardMakeLoadTimer()) == NULL)
-    ready = false;
+  board->debug.serial = boardMakeSerial();
 #else
   board->debug.serial = NULL;
-  board->debug.timer = NULL;
 #endif
 
-  ready = ready && boardSetupChronoPackage(&board->chronoPackage);
-  ready = ready && boardSetupAmpPackage(&board->ampPackage);
-  ready = ready && boardSetupAdcPackage(&board->adcPackage);
-  ready = ready && boardSetupButtonPackage(&board->buttonPackage,
-      board->chronoPackage.factory);
-  ready = ready && boardSetupControlPackage(&board->controlPackage,
+  board->chronoPackage = boardSetupChronoPackage();
+  board->ampPackage = boardSetupAmpPackage();
+  board->adcPackage = boardSetupAdcPackage();
+  board->buttonPackage = boardSetupButtonPackage(board->chronoPackage.factory);
+  board->controlPackage = boardSetupControlPackage(
       board->chronoPackage.factory);
 
   /* Initialize Deep-Sleep wake-up logic */
-  if ((board->system.wakeup = boardMakeWakeupInt()) == NULL)
-    ready = false;
-
-  /* Initialize Work Queue */
-  if ((WQ_DEFAULT = init(WorkQueue, &workQueueConfig)) == NULL)
-    ready = false;
-
-  assert(ready);
-  (void)ready;
-
-  board->indication.red = pinInit(BOARD_LED_PIN);
-  pinOutput(board->indication.red, true);
+  board->system.wakeup = boardMakeWakeupInt();
 
   board->indication.active = 0;
   board->indication.blink = 0;
@@ -76,6 +75,7 @@ void appBoardInit(struct Board *board)
   board->system.autosuspend = false;
   board->system.powered = false;
 
+  board->debug.idle = 0;
   board->debug.loops = 0;
 }
 /*----------------------------------------------------------------------------*/

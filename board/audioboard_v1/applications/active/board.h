@@ -79,7 +79,6 @@ struct Board
   struct
   {
     struct Interface *serial;
-    struct Timer *timer;
 
     uint32_t idle;
     uint32_t loops;

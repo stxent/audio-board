@@ -17,21 +17,20 @@ static void showStatus(struct Interface *spi, struct Pin cs, uint8_t value)
 /*----------------------------------------------------------------------------*/
 int main(void)
 {
-  struct AmpPackage ampPackage;
-  struct ChronoPackage chronoPackage;
-  struct CodecPackage codecPackage;
-  struct ControlPackage controlPackage;
-
   boardSetupClock();
 
   const struct Pin led = pinInit(BOARD_LED_PIN);
   pinOutput(led, false);
 
-  boardSetupChronoPackage(&chronoPackage);
-  boardSetupAmpPackage(&ampPackage);
-  boardSetupCodecPackage(&codecPackage, NULL, false, false);
-  boardSetupControlPackage(&controlPackage, chronoPackage.factory);
+  struct ChronoPackage chronoPackage = boardSetupChronoPackage();
+  struct AmpPackage ampPackage = boardSetupAmpPackage();
+  struct ControlPackage controlPackage = boardSetupControlPackage(
+      chronoPackage.factory);
 
+  /* Reset codec pins */
+  boardSetupCodecPackage(NULL, false, false);
+
+  /* Reset LEDs */
   showStatus(controlPackage.spi, controlPackage.csW, 0);
 
   /* Enable power amplifier */

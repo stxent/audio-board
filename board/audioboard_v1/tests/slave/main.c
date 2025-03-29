@@ -22,7 +22,7 @@ struct MockBoard
   struct Pin rst;
 };
 /*----------------------------------------------------------------------------*/
-static bool mockBoardInit(struct MockBoard *);
+static void mockBoardInit(struct MockBoard *);
 static void onSlaveUpdateEvent(void *);
 static void slaveUpdateTask(void *);
 /*----------------------------------------------------------------------------*/
@@ -30,27 +30,21 @@ static const struct WorkQueueConfig workQueueConfig = {
     .size = 4
 };
 /*----------------------------------------------------------------------------*/
-static bool mockBoardInit(struct MockBoard *board)
+static void mockBoardInit(struct MockBoard *board)
 {
   board->led = pinInit(BOARD_LED_PIN);
-  if (!pinValid(board->led))
-    return false;
+  assert(pinValid(board->led));
   pinOutput(board->led, false);
 
   board->mux = pinInit(BOARD_I2S_MUX_PIN);
-  if (!pinValid(board->mux))
-    return false;
+  assert(pinValid(board->mux));
   pinOutput(board->mux, true);
 
   board->rst = pinInit(BOARD_I2S_RST_PIN);
-  if (!pinValid(board->rst))
-    return false;
+  assert(pinValid(board->rst));
   pinOutput(board->rst, true);
 
-  if (!boardSetupAmpPackage(&board->amp))
-    return false;
-
-  return true;
+  board->amp = boardSetupAmpPackage();
 }
 /*----------------------------------------------------------------------------*/
 static void onSlaveUpdateEvent(void *argument)
@@ -105,21 +99,17 @@ static void slaveUpdateTask(void *argument)
 int main(void)
 {
   struct MockBoard board;
-  bool ready;
-
-  ready = mockBoardInit(&board);
-  assert(ready);
-  (void)ready;
+  mockBoardInit(&board);
 
   /* Initialize Work Queues */
   WQ_DEFAULT = init(WorkQueue, &workQueueConfig);
   assert(WQ_DEFAULT != NULL);
 
   board.slave = boardMakeI2CSlave();
-  assert(board.slave != NULL);
   ifSetCallback(board.slave, onSlaveUpdateEvent, &board);
 
   pinSet(board.led);
   wqStart(WQ_DEFAULT);
+
   return 0;
 }

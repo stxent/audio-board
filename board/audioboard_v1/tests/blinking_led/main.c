@@ -16,17 +16,19 @@ static void onTimerOverflow(void *argument)
 /*----------------------------------------------------------------------------*/
 int main(void)
 {
-  boardSetupClock();
   bool event = false;
+
+  boardSetupClock();
 
   const struct Pin led = pinInit(BOARD_LED_PIN);
   pinOutput(led, true);
 
-  struct Timer * const timer = boardMakeControlTimer();
-  assert(timer != NULL);
-  timerSetOverflow(timer, timerGetFrequency(timer) / 2);
-  timerSetCallback(timer, onTimerOverflow, &event);
-  timerEnable(timer);
+  struct ChronoPackage chronoPackage = boardSetupChronoPackage();
+
+  timerSetOverflow(chronoPackage.load,
+      timerGetFrequency(chronoPackage.load) / 2);
+  timerSetCallback(chronoPackage.load, onTimerOverflow, &event);
+  timerEnable(chronoPackage.load);
 
   while (1)
   {

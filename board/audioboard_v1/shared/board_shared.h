@@ -10,19 +10,13 @@
 #include <halm/pin.h>
 #include <stdbool.h>
 /*----------------------------------------------------------------------------*/
-struct Interface;
-struct Interrupt;
-struct Timer;
-struct TimerFactory;
-struct Watchdog;
-struct WorkQueue;
-/*----------------------------------------------------------------------------*/
 #define BOARD_ADC_PIN                   PIN(1, 10)
 #define BOARD_BUTTON_MIC_PIN            PIN(0, 7)
 #define BOARD_BUTTON_SPK_PIN            PIN(1, 8)
 #define BOARD_BUTTON_VOL_M_PIN          PIN(1, 11)
 #define BOARD_BUTTON_VOL_P_PIN          PIN(0, 2)
 #define BOARD_LED_PIN                   PIN(1, 2)
+#define BOARD_LED_INV                   false
 #define BOARD_SPI_CS0_PIN               PIN(0, 3)
 #define BOARD_SPI_CS1_PIN               PIN(1, 4)
 #define BOARD_SPI_EN1_PIN               PIN(3, 2)
@@ -42,6 +36,13 @@ struct WorkQueue;
 #define BOARD_AUDIO_OUTPUT_PATH_A       AIC3X_HP_OUT_DIFF
 #define BOARD_AUDIO_OUTPUT_CH_B         (CHANNEL_LEFT | CHANNEL_RIGHT)
 #define BOARD_AUDIO_OUTPUT_PATH_B       AIC3X_LINE_OUT_DIFF
+/*----------------------------------------------------------------------------*/
+struct Interface;
+struct Interrupt;
+struct Timer;
+struct TimerFactory;
+struct Watchdog;
+struct WorkQueue;
 
 struct AdcPackage
 {
@@ -66,6 +67,7 @@ struct ButtonPackage
 struct ChronoPackage
 {
   struct Timer *base;
+  struct Timer *load;
   struct TimerFactory *factory;
 };
 
@@ -89,32 +91,32 @@ struct ControlPackage
 /*----------------------------------------------------------------------------*/
 BEGIN_DECLS
 
+void boardResetClock(void);
+bool boardSetupClock(void);
+void boardSetupDefaultWQ(void);
+bool boardRecoverState(uint32_t *);
+void boardSaveState(uint32_t);
+
 struct Interface *boardMakeAdc(void);
 struct Timer *boardMakeAdcTimer(void);
 struct Timer *boardMakeCodecTimer(void);
-struct Timer *boardMakeControlTimer(void);
+struct Timer *boardMakeLoadTimer(void);
 struct Entity *boardMakeCodec(struct WorkQueue *, struct Interface *,
     struct Timer *, uint16_t);
 struct Interface *boardMakeI2CMaster(void);
 struct Interface *boardMakeI2CSlave(void);
-struct Timer *boardMakeLoadTimer(void);
 struct Interface *boardMakeMemory(void);
 struct Interface *boardMakeSerial(void);
 struct Interface *boardMakeSpi(void);
 struct Interrupt *boardMakeWakeupInt(void);
 struct Watchdog *boardMakeWatchdog(void);
 
-bool boardRecoverState(uint32_t *);
-void boardSaveState(uint32_t);
-bool boardSetupAdcPackage(struct AdcPackage *);
-bool boardSetupAmpPackage(struct AmpPackage *);
-bool boardSetupButtonPackage(struct ButtonPackage *, struct TimerFactory *);
-bool boardSetupChronoPackage(struct ChronoPackage *);
-bool boardSetupCodecPackage(struct CodecPackage *, struct WorkQueue *, bool,
-    bool);
-bool boardSetupControlPackage(struct ControlPackage *, struct TimerFactory *);
-void boardResetClock(void);
-bool boardSetupClock(void);
+struct AdcPackage boardSetupAdcPackage(void);
+struct AmpPackage boardSetupAmpPackage(void);
+struct ButtonPackage boardSetupButtonPackage(struct TimerFactory *);
+struct ChronoPackage boardSetupChronoPackage(void);
+struct CodecPackage boardSetupCodecPackage(struct WorkQueue *, bool, bool);
+struct ControlPackage boardSetupControlPackage(struct TimerFactory *);
 
 END_DECLS
 /*----------------------------------------------------------------------------*/

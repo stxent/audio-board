@@ -5,19 +5,14 @@
  */
 
 #include "board_shared.h"
-#include <halm/generic/work_queue.h>
-#include <halm/timer.h>
+#include <halm/generic/timer_factory.h>
+#include <halm/wq.h>
 #include <xcore/interface.h>
 #include <assert.h>
 #include <stdio.h>
 /*----------------------------------------------------------------------------*/
 #define SAMPLE_COUNT 8
-
 static uint32_t samples[SAMPLE_COUNT] = {0};
-/*----------------------------------------------------------------------------*/
-static const struct WorkQueueConfig workQueueConfig = {
-    .size = 4
-};
 /*----------------------------------------------------------------------------*/
 static void flushAcquiredSamples(void *argument)
 {
@@ -49,26 +44,23 @@ static void onLoadTimerOverflow(void *)
 int main(void)
 {
   boardSetupClock();
+  boardSetupDefaultWQ();
 
   struct Interface * const serial = boardMakeSerial();
-  assert(serial != NULL);
+  struct ChronoPackage chronoPackage = boardSetupChronoPackage();
 
-  struct Timer * const baseTimer = boardMakeAdcTimer();
-  assert(baseTimer != NULL);
-  timerSetCallback(baseTimer, onFlushTimerOverflow, serial);
-  timerSetOverflow(baseTimer, timerGetFrequency(baseTimer) * SAMPLE_COUNT);
+  struct Timer * const flushTimer = timerFactoryCreate(chronoPackage.factory);
+  assert(flushTimer != NULL);
 
-  struct Timer * const loadTimer = boardMakeControlTimer();
-  assert(loadTimer != NULL);
-  timerSetCallback(loadTimer, onLoadTimerOverflow, NULL);
-  timerSetOverflow(loadTimer, timerGetFrequency(loadTimer));
+  timerSetCallback(flushTimer, onFlushTimerOverflow, serial);
+  timerSetOverflow(flushTimer, timerGetFrequency(flushTimer) * SAMPLE_COUNT);
 
-  timerEnable(loadTimer);
-  timerEnable(baseTimer);
+  timerSetCallback(chronoPackage.load, onLoadTimerOverflow, NULL);
+  timerSetOverflow(chronoPackage.load, timerGetFrequency(chronoPackage.load));
 
-  /* Initialize Work Queue */
-  WQ_DEFAULT = init(WorkQueue, &workQueueConfig);
-  assert(WQ_DEFAULT != NULL);
+  timerEnable(chronoPackage.base);
+  timerEnable(flushTimer);
+  timerEnable(chronoPackage.load);
 
   wqStart(WQ_DEFAULT);
   return 0;

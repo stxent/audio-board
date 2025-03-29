@@ -125,15 +125,13 @@ int main(void)
   boardSetupClock();
 
   struct Interface * const i2c = boardMakeI2CMaster();
-  assert(i2c != NULL);
 
   struct Interface * const serial = boardMakeSerial();
-  assert(serial != NULL);
   ifSetCallback(serial, onSerialEvent, &event);
 
   const struct CodecConfig codecConfig = {
       .interface = i2c,
-      .address = 0x18,
+      .address = 0,
       .rate = 0,
       .amp = BOARD_AMP_POWER_PIN,
       .gain0 = BOARD_AMP_GAIN0_PIN,

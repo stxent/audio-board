@@ -493,7 +493,7 @@ static void autoSuspendTask(void *argument)
 
   board->event.suspend = false;
 
-  pinReset(board->indication.red);
+  pinWrite(board->indication.red, BOARD_LED_INV);
   boardResetClock();
   interruptEnable(board->system.wakeup);
 
@@ -502,7 +502,7 @@ static void autoSuspendTask(void *argument)
 
   interruptDisable(board->system.wakeup);
   boardSetupClock();
-  pinSet(board->indication.red);
+  pinWrite(board->indication.red, !BOARD_LED_INV);
 }
 /*----------------------------------------------------------------------------*/
 static void ledUpdateTask(void *argument)
@@ -687,13 +687,11 @@ static void spkUpdateTask(void *argument)
 static void startupTask(void *argument)
 {
   struct Board * const board = argument;
-  const uint8_t sw = readSwitchState(board);
-
   struct Settings settings;
-  bool ready = true;
 
   writeLedState(board, 0);
 
+  const uint8_t sw = readSwitchState(board);
   const bool valid = loadSettings(board->config.memory, FLASH_OFFSET,
       &settings);
 
@@ -706,13 +704,9 @@ static void startupTask(void *argument)
   {
     const bool pll = (sw & SW_EXT_CLOCK) == 0;
 
-    if (boardSetupCodecPackage(&board->codecPackage, WQ_DEFAULT, true, pll))
-    {
-      codecSetErrorCallback(board->codecPackage.codec, onBusError, board);
-      codecSetIdleCallback(board->codecPackage.codec, onBusIdle, board);
-    }
-    else
-      ready = false;
+    board->codecPackage = boardSetupCodecPackage(WQ_DEFAULT, true, pll);
+    codecSetErrorCallback(board->codecPackage.codec, onBusError, board);
+    codecSetIdleCallback(board->codecPackage.codec, onBusIdle, board);
 
     switchReadTask(board);
     micUpdateTask(board);
@@ -721,52 +715,43 @@ static void startupTask(void *argument)
   }
   else
   {
+    board->system.slave = boardMakeI2CSlave();
     board->system.sw = sw;
 
-    if ((board->system.slave = boardMakeI2CSlave()) != NULL)
+    struct SlaveRegOverlay overlay;
+    uint32_t state;
+
+    memset(&overlay, 0, sizeof(overlay));
+    overlay.sw = sw;
+
+    if (valid)
     {
-      struct SlaveRegOverlay overlay;
-      uint32_t state;
+      /* Step 1: try to load saved codec settings */
+      slaveLoadSettings(&overlay, &settings);
+    }
 
-      memset(&overlay, 0, sizeof(overlay));
-      overlay.sw = sw;
-
-      if (valid)
-      {
-        /* Step 1: try to load saved codec settings */
-        slaveLoadSettings(&overlay, &settings);
-      }
-
-      if (boardRecoverState(&state))
-      {
-        /* Step 2: try to recover previous state */
-        overlay.sys = (uint8_t)state;
-        overlay.ctl = (uint8_t)(state >> 8);
-        overlay.led = (uint8_t)(state >> 16);
-      }
-      else
-      {
-        /* Step 3: use board configuration switches */
-        if (sw & SW_EXT_CLOCK)
-          overlay.sys |= SLAVE_SYS_EXT_CLOCK;
-        if (sw & SW_OUTPUT_GAIN_BOOST)
-          overlay.ctl |= SLAVE_CTL_GAIN0 | SLAVE_CTL_GAIN1;
-      }
-
-      ifWrite(board->system.slave, &overlay, sizeof(overlay));
-      ifSetCallback(board->system.slave, onSlaveUpdateEvent, board);
+    if (boardRecoverState(&state))
+    {
+      /* Step 2: try to recover previous state */
+      overlay.sys = (uint8_t)state;
+      overlay.ctl = (uint8_t)(state >> 8);
+      overlay.led = (uint8_t)(state >> 16);
     }
     else
-      ready = false;
+    {
+      /* Step 3: use board configuration switches */
+      if (sw & SW_EXT_CLOCK)
+        overlay.sys |= SLAVE_SYS_EXT_CLOCK;
+      if (sw & SW_OUTPUT_GAIN_BOOST)
+        overlay.ctl |= SLAVE_CTL_GAIN0 | SLAVE_CTL_GAIN1;
+    }
 
-    if (!boardSetupCodecPackage(&board->codecPackage, NULL, false, false))
-      ready = false;
+    ifWrite(board->system.slave, &overlay, sizeof(overlay));
+    ifSetCallback(board->system.slave, onSlaveUpdateEvent, board);
 
+    board->codecPackage = boardSetupCodecPackage(NULL, false, false);
     slaveUpdateTask(board);
   }
-
-  assert(ready);
-  (void)ready;
 
   if (board->system.slave == NULL)
   {
@@ -797,9 +782,10 @@ static void startupTask(void *argument)
 
 #ifdef ENABLE_DBG
   /* 24-bit SysTick timer is used for debug purposes */
-  timerSetCallback(board->debug.timer, onLoadTimerOverflow, board);
-  timerSetOverflow(board->debug.timer, timerGetFrequency(board->debug.timer));
-  timerEnable(board->debug.timer);
+  timerSetCallback(board->chronoPackage.load, onLoadTimerOverflow, board);
+  timerSetOverflow(board->chronoPackage.load,
+      timerGetFrequency(board->chronoPackage.load));
+  timerEnable(board->chronoPackage.load);
 #endif
 }
 /*----------------------------------------------------------------------------*/

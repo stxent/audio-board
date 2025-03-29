@@ -9,7 +9,6 @@
 #include <halm/interrupt.h>
 #include <halm/pm.h>
 #include <halm/watchdog.h>
-#include <assert.h>
 /*----------------------------------------------------------------------------*/
 static void onWakeupEvent(void *argument)
 {
@@ -18,17 +17,16 @@ static void onWakeupEvent(void *argument)
 /*----------------------------------------------------------------------------*/
 int main(void)
 {
-  boardSetupClock();
   bool event = false;
+
+  boardSetupClock();
 
   const struct Pin led = pinInit(BOARD_LED_PIN);
   pinOutput(led, false);
 
   struct Watchdog * const watchdog = boardMakeWatchdog();
-  assert(watchdog != NULL);
 
   struct Interrupt * const wakeup = boardMakeWakeupInt();
-  assert(wakeup != NULL);
   interruptSetCallback(wakeup, onWakeupEvent, &event);
   interruptEnable(wakeup);
 
