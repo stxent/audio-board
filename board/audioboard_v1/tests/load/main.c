@@ -46,21 +46,19 @@ int main(void)
   boardSetupClock();
   boardSetupDefaultWQ();
 
-  struct Interface * const serial = boardMakeSerial();
   struct ChronoPackage chronoPackage = boardSetupChronoPackage();
-
-  struct Timer * const flushTimer = timerFactoryCreate(chronoPackage.factory);
-  assert(flushTimer != NULL);
+  struct Timer * const eventTimer = chronoPackage.load;
+  struct Timer * const flushTimer = boardMakeAdcTimer();
+  struct Interface * const serial = boardMakeSerial();
 
   timerSetCallback(flushTimer, onFlushTimerOverflow, serial);
   timerSetOverflow(flushTimer, timerGetFrequency(flushTimer) * SAMPLE_COUNT);
 
-  timerSetCallback(chronoPackage.load, onLoadTimerOverflow, NULL);
-  timerSetOverflow(chronoPackage.load, timerGetFrequency(chronoPackage.load));
+  timerSetCallback(eventTimer, onLoadTimerOverflow, NULL);
+  timerSetOverflow(eventTimer, timerGetFrequency(eventTimer));
 
-  timerEnable(chronoPackage.base);
+  timerEnable(eventTimer);
   timerEnable(flushTimer);
-  timerEnable(chronoPackage.load);
 
   wqStart(WQ_DEFAULT);
   return 0;
