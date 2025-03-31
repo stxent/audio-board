@@ -431,6 +431,10 @@ struct CodecPackage boardSetupCodecPackage(struct WorkQueue *wq, bool active,
   }
   else
   {
+    package.i2c = NULL;
+    package.timer = NULL;
+    package.codec = NULL;
+
     package.reset = pinInit(BOARD_I2S_RST_PIN);
     pinOutput(package.reset, true);
   }
