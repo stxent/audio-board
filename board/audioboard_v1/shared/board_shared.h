@@ -8,7 +8,6 @@
 #define BOARD_AUDIOBOARD_V1_SHARED_BOARD_SHARED_H_
 /*----------------------------------------------------------------------------*/
 #include <halm/pin.h>
-#include <stdbool.h>
 /*----------------------------------------------------------------------------*/
 #define BOARD_ADC_PIN                   PIN(1, 10)
 #define BOARD_BUTTON_MIC_PIN            PIN(0, 7)

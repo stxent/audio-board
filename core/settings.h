@@ -7,7 +7,6 @@
 #ifndef CORE_SETTINGS_H_
 #define CORE_SETTINGS_H_
 /*----------------------------------------------------------------------------*/
-#include <stdbool.h>
 #include <stdint.h>
 /*----------------------------------------------------------------------------*/
 struct Interface;
